@@ -22,6 +22,8 @@ Item {
   readonly property int fontBody: host ? host.fontBody : Style.font.body
   readonly property int fontLabel: host ? host.fontLabel : Style.font.bodySmall
   readonly property int fontCaption: host ? host.fontCaption : Style.font.caption
+  // Codex or Claude: the session names itself; Codex sessions predate this.
+  readonly property string agentName: session && session.agentName !== undefined ? session.agentName : "Codex"
   readonly property var approval: session && session.approvals.length ? session.approvals[0] : null
   function focusInput() { composer.forceActiveFocus(); composer.cursorPosition = composer.text.length }
   function beginVoice() { voicePrefix = session.draft ? session.draft.replace(/\s*$/, " ") : "" }
@@ -84,15 +86,15 @@ Item {
       anchors.left: back.right; anchors.leftMargin: Style.space(10); y: Style.space(8); spacing: Style.space(10)
       Text { text: "OMARCHY"; color: root.accent; font.family: root.fontFamily; font.pixelSize: root.fontCaption; font.letterSpacing: 2; font.weight: Font.Bold }
       Text { text: "›"; color: root.muted; font.family: root.fontFamily; font.pixelSize: root.fontLabel }
-      Text { text: "Codex"; color: root.muted; font.family: root.fontFamily; font.pixelSize: root.fontLabel }
+      Text { text: root.agentName; color: root.muted; font.family: root.fontFamily; font.pixelSize: root.fontLabel }
     }
     Keycap { anchors.right: parent.right; y: Style.space(5); label: "esc"; foreground: root.foreground }
     Text {
       y: Style.space(43); width: parent.width - external.width - Style.space(12); elide: Text.ElideMiddle
-      text: session.mode === "agent" ? session.cwd : "Quick question · " + (session.settings.model || "gpt-5.6-luna") + (session.settings.fast === false ? " · Standard" : " · Fast")
+      text: session.headerText !== undefined ? session.headerText : session.mode === "agent" ? session.cwd : "Quick question · " + (session.settings.model || "gpt-5.6-luna") + (session.settings.fast === false ? " · Standard" : " · Fast")
       color: root.muted; font.family: root.fontFamily; font.pixelSize: root.fontLabel
     }
-    ActionButton { id: external; anchors.right: parent.right; y: Style.space(33); label: session.busy ? "Stop & continue ↗" : "Continue in Codex ↗"; available: !!session.threadId; onTriggered: session.requestHandoff() }
+    ActionButton { id: external; anchors.right: parent.right; y: Style.space(33); label: session.busy ? "Stop & continue ↗" : "Continue in " + (session.handoffLabel !== undefined ? session.handoffLabel.replace(/^Continue in /, "") : "Codex") + " ↗"; available: !!session.threadId; onTriggered: session.requestHandoff() }
   }
   Rectangle { y: top.y + top.height; width: parent.width; height: 1; color: Util.alpha(root.foreground, 0.10) }
   ListModel { id: display }
@@ -108,7 +110,7 @@ Item {
       required property string role
       required property string text
       width: history.width; height: label.height + body.height + Style.space(6)
-      Text { id: label; text: parent.role === "user" ? "You" : parent.role === "activity" ? "Activity" : "Codex"; color: parent.role === "user" ? root.muted : root.accent; font.family: root.fontFamily; font.pixelSize: root.fontLabel }
+      Text { id: label; text: parent.role === "user" ? "You" : parent.role === "activity" ? "Activity" : root.agentName; color: parent.role === "user" ? root.muted : root.accent; font.family: root.fontFamily; font.pixelSize: root.fontLabel }
       TextEdit {
         id: body; y: label.height + Style.space(6); width: parent.width; height: contentHeight
         text: root.markdown(parent.text); textFormat: TextEdit.MarkdownText; wrapMode: TextEdit.Wrap
@@ -118,7 +120,7 @@ Item {
         onLinkActivated: function(link) { if (/^https?:\/\//.test(link)) Qt.openUrlExternally(link) }
       }
     }
-    Text { visible: !history.count; anchors.centerIn: parent; width: parent.width; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.Wrap; text: session.busy ? "Connecting to Codex…" : "Ask a question. Keep the conversation here.\nType or use your voice hotkey."; color: root.muted; font.family: root.fontFamily; font.pixelSize: root.fontTitle }
+    Text { visible: !history.count; anchors.centerIn: parent; width: parent.width; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.Wrap; text: session.busy ? "Connecting to " + root.agentName + "…" : "Ask a question. Keep the conversation here.\nType or use your voice hotkey."; color: root.muted; font.family: root.fontFamily; font.pixelSize: root.fontTitle }
   }
   Text {
     id: status
@@ -200,7 +202,7 @@ Item {
     Column {
       id: approvalContent
       width: parent.width; spacing: Style.space(16)
-      Text { text: "Codex needs your input"; color: root.foreground; font.family: root.fontFamily; font.pixelSize: root.fontInput }
+      Text { text: root.agentName + " needs your input"; color: root.foreground; font.family: root.fontFamily; font.pixelSize: root.fontInput }
       TextEdit { width: parent.width; height: contentHeight; readOnly: true; selectByMouse: true; wrapMode: TextEdit.Wrap; color: root.foreground; font.family: root.fontFamily; font.pixelSize: root.fontBody;
         text: session.approvalDetail(root.approval) }
 
@@ -220,7 +222,7 @@ Item {
       Row { spacing: Style.space(10)
         ActionButton { label: root.approval && root.approval.params.questions ? "Answer" : "Allow once"; onTriggered: session.decide(true, root.answers) }
         ActionButton { id: decline; label: "Decline"; onTriggered: session.decide(false) }
-        ActionButton { label: "Stop & continue in Codex"; onTriggered: session.requestHandoff() }
+        ActionButton { label: "Stop & continue in " + root.agentName; onTriggered: session.requestHandoff() }
       }
     }
     }

@@ -46,6 +46,14 @@ Item {
     if (text.trim()) {
       rows.push({id: "ask", title: "Ask Claude here", subtitle: text, icon: "✻", section: "Continue with", tier: /^\?/.test(ctx.query) ? "answer" : "fallback",
         score: root.preferredScore(), verb: "Ask", altVerb: "Open in Claude Code", action: {type: "provider-view", provider: "claude", text: text}, altAction: {type: "claude-external", text: text}})
+      // Typing "claude" or "ask" also finds the two entry rows as ordinary
+      // matches, so they rank and learn like apps. Not for "?" questions.
+      if (!scoped && !/^\?/.test(ctx.query)) {
+        var so = Match.match(text, "Claude", "ask claude quick question recent conversations")
+        if (so) rows.push({id: "open", title: "Claude", subtitle: "Quick questions and recent conversations", icon: "✻", score: so, verb: "Open", action: {type: "navigate", scope: "claude", title: "Claude"}})
+        var sn = Match.match(text, "Ask Claude here", "claude question")
+        if (sn) rows.push({id: "new", title: "Ask Claude here", subtitle: "Type or speak a quick question", icon: "✻", score: sn, verb: "Ask", action: {type: "provider-view", provider: "claude", text: ""}})
+      }
     } else {
       if (!scoped) rows.push({id: "open", title: "Claude", subtitle: "Quick questions and recent conversations", icon: "✻", score: 24.5, verb: "Open", action: {type: "navigate", scope: "claude", title: "Claude"}})
       rows.push({id: "new", title: "Ask Claude here", subtitle: "Type or speak a quick question", icon: "✻", score: scoped ? 100 : 23.5, verb: "Ask", action: {type: "provider-view", provider: "claude", text: ""}})

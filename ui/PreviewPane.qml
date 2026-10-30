@@ -10,6 +10,8 @@ Item {
   property color accent: Commons.Color.accent
   property color foreground: Commons.Color.menu.text
   readonly property bool clipboard: (row.previewLabel || "") === "CLIPBOARD" || (row.previewLabel || "") === "DICTATION"
+  // Long text to read (clipboard, dictation, a definition): body font, wrapped at words.
+  readonly property bool prose: clipboard || row.previewStyle === "prose"
   readonly property bool emoji: row.emoji === true
   readonly property string imagePath: String(row.previewImage || "")
   readonly property bool image: imagePath !== ""
@@ -85,10 +87,10 @@ Item {
     visible: !!root.row.preview
     text: root.row.preview || ""
     textFormat: Text.PlainText
-    color: root.clipboard ? Util.alpha(root.foreground, 0.85) : root.accent
-    font.family: root.emoji ? "Noto Color Emoji" : (root.clipboard ? Style.font.menuFamily : "monospace")
-    font.pixelSize: root.emoji ? Style.space(72) : (root.clipboard ? Style.font.body : root.captionSize(text, width, room))
-    wrapMode: Text.WrapAnywhere
+    color: root.prose ? Util.alpha(root.foreground, 0.85) : root.accent
+    font.family: root.emoji ? "Noto Color Emoji" : (root.prose ? Style.font.menuFamily : "monospace")
+    font.pixelSize: root.emoji ? Style.space(72) : (root.prose ? Style.font.body : root.captionSize(text, width, room))
+    wrapMode: root.row.previewStyle === "prose" ? Text.Wrap : Text.WrapAnywhere
     elide: Text.ElideRight
   }
   // Reads a vector's declared size; rasters report theirs through `picture`.

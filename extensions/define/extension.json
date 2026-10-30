@@ -1,0 +1,29 @@
+{
+  "name": "Define",
+  "version": "1.0.0",
+  "author": "Taylor Ludwig",
+  "description": "English definitions from Wiktionary data: define serendipity",
+  "apiVersion": 1,
+  "icon": "󰗚",
+  "color": "#e5c07b",
+  "license": "MIT",
+  "commands": [
+    {
+      "id": "define",
+      "prefix": "define",
+      "title": "Define a word",
+      "summary": "Look up an English word's definitions",
+      "args": [
+        {
+          "name": "word",
+          "hint": "an English word or short phrase",
+          "rest": true
+        }
+      ],
+      "examples": [
+        "define serendipity",
+        "define ad hoc"
+      ]
+    }
+  ]
+}
